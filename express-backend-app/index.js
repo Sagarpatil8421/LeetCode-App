@@ -7,6 +7,11 @@ app.use(bodyparser.json());
 
 let USERS = [];
 
+//admin array
+const ADMINS = {
+    "user@admin.com": "Pass123"
+};
+
 const QUESTIONS = [{
     title: "Two states",
     description: "Given an array , return the maximum of the array?",
@@ -15,9 +20,19 @@ const QUESTIONS = [{
         output: "5"
     }]
 }];
-
-
 const SUBMISSIONS = [];
+
+
+//check user is admin on not
+function isAdmin(req,res,next){
+    const{email, password} = req.body;
+
+    if(ADMINS[email] && ADMINS[email] === password){
+        next(); //if admin user procced to next route 
+    } else{
+        res.status(403).send('You are not an admin');
+    }
+}
 
 app.post('/signup', function (req, res){
     //decode boy
@@ -69,6 +84,21 @@ app.post('/submissions',function(req,res){
     SUBMISSIONS.push({problemId,submission,isAccepted});
 
     res.status(200).json({isAccepted});
+});
+
+// add new problem (admin only)
+
+app.post('/problems',isAdmin, function(req, res){
+    const {title, description, testCases} =- req.body;
+
+    if(!title || !description || !testCases){
+        res.status(400).send('Bad request: Missing required fields');
+    }
+
+    QUESTIONS.push({title,description,testCases});
+
+    res.status(201).send('Problem added Successfully');
+
 });
 
 app.listen(port, () => {
